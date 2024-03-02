@@ -60,7 +60,7 @@ ToggleCamera.OnClientEvent:Connect(function(Enabled, cameraAngle)
 	fieldOfViewTween:Play()
 	roundAngleTween.Completed:Wait()
 	loopView = true
-  angleType = "Ring"
+	angleType = "Ring"
   viewObject = roundAngles[cameraAngle]
 	viewTarget = HumanoidRootPart
 end)
