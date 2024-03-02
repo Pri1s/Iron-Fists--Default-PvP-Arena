@@ -83,13 +83,17 @@ function States:Default(substate)
 	
 	if substate == "Ready" then
 		self.Animations.Emotes.Ready:Play()
+	elseif substate == "Celebration" then
+		self.Animations.Emotes.Celebrate:Play()
+	elseif substate == "Defeat" then
+		self.Animations.Emotes.Defeat:Play()
 	elseif substate == "Thump" then
 		self.Animations.Thump:Play()
 		task.wait(self.Animations.Thump.Length)
 		KnockedEvent:FireServer("Knockdown")
 	elseif substate == "Knockout" then
 		self.Animations.Knockout:Play()
-		task.wait(self.Animations.Knockout.Length)
+		task.wait(self.Animations.Knockout.Length - 0.2)
 		KnockedEvent:FireServer("Knockout")
 	end
 	

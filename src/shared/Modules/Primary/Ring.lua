@@ -13,7 +13,8 @@ local InitializeViewports = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.
 local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
 local CompletionEvent = ReplicatedStorage.Remotes.Ring.Primary.Completion
 
-local InterfaceEnabled  =ReplicatedStorage.Remotes.Other["Interface/Enabled"]
+local InterfaceEnabled  = ReplicatedStorage.Remotes.Other["Interface/Enabled"]
+local TransitionEvent = ReplicatedStorage.Remotes.Other.Transition
 local ControlsEnabled = ReplicatedStorage.Remotes.Ring.Other["Controls/Enabled"]
 local ToggleCamera = ReplicatedStorage.Remotes.Ring.Other.ToggleCamera
 local CountEvent = ReplicatedStorage.Remotes.Ring.Other.Count
@@ -215,10 +216,16 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
 	end
 	
 	if self.Round < Settings.Rounds and victoryType ~= "Knockout" then
+		TransitionEvent:FireAllClients()
+		task.wait(Settings.Delays.Transition)
 		self:Spawn()
 	elseif self.Round >= Settings.Rounds and victoryType ~= "Knockout" then
+		TransitionEvent:FireAllClients()
+		task.wait(Settings.Delays.Transition - 0.4)
 		self:Complete(nil)
 	elseif victoryType == "Knockout" then
+		TransitionEvent:FireAllClients()
+		task.wait(Settings.Delays.Transition - 0.4)
 		self:Complete(Victor, Opponent)
 	end
 	
@@ -247,10 +254,12 @@ function Ring:Complete(victorByKnockout, loserByKnockout)
 	
 	Victor.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Victor.CFrame
 	Opponent.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Opponent.CFrame
-	InterfaceEnabled:FireAllClients("All")
+	InterfaceEnabled:FireAllClients(false, "Transition")
+	TransitionStateEvent:FireClient(Victor, "Default", "Celebration")
+	TransitionEvent:FireClient(Opponent, "Default", "Defeat")
+	task.wait(Settings.Delays.Transition - 0.4)
 	CompletionEvent:FireAllClients()
-	TransitionStateEvent:FireClient(Victor, "Default", "Ready")
-	TeleportService:TeleportAsync(15853147715, {Victor, Opponent}, nil)
+	--TeleportService:TeleportAsync(Settings.homeId, {Victor, Opponent}, nil)
 end
 
 

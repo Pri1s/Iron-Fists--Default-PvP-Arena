@@ -58,13 +58,11 @@ ToggleCamera.OnClientEvent:Connect(function(Enabled, cameraAngle)
 	local fieldOfViewTween = TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40})
 	roundAngleTween:Play()
 	fieldOfViewTween:Play()
-	local initial = tick()
-	print("round angle tween started.")
 	roundAngleTween.Completed:Wait()
-	print("round angle tween duration: ", tostring(tick() - initial))
 	loopView = true
-  angleType = "Follow"
+  angleType = "Ring"
   viewObject = roundAngles[cameraAngle]
+	viewTarget = HumanoidRootPart
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -72,9 +70,8 @@ RunService.RenderStepped:Connect(function()
 	
 	if angleType == "Spin" then
 		Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
-	elseif angleType == "Ring/Main" then
-
-		Camera.CFrame = CFrame.lookAt(viewObject.Position, HumanoidRootPart.Position)
+	elseif angleType == "Ring" then
+		Camera.CFrame = CFrame.lookAt(viewObject.Position, viewTarget.Position)
 	end
 	
 end)

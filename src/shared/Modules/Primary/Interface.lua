@@ -18,16 +18,61 @@ Interface.BlockTweenInfo = {
 	
 }
 
-function Interface.DisableUi(PlayerGui, Amount)
-	if Amount == "All" then
+Interface.TransitionTweenInfo = {
+
+	In = TweenInfo.new(
+		0.5,
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.InOut
+	),
+
+	Out = TweenInfo.new(
+		0.1,
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.InOut
+	)
+
+}
+
+Interface.TransitionGoals = {
+	Default = UDim2.new(-1, 0, 0, 0),
+	In = {Position = UDim2.new(0, 0, 0, 0)},
+	Out = {Position = UDim2.new(1, 0, 0, 0)}
+}
+
+function Interface.DisableUi(PlayerGui, Enabled, Exceptions)
+
+	if not Enabled then
 		
 		for _, screenGui in ipairs(PlayerGui:GetChildren()) do
-			if not screenGui:IsA("ScreenGui") then continue end
+			if not screenGui:IsA("ScreenGui") then continue end 
+			if screenGui.Name == Exceptions then continue end
 			screenGui.Enabled = false
 		end
 
 	end
 
+end
+
+function Interface.Transition(TransitionUi)
+	local bInTween = TweenService:Create(TransitionUi.Black, Interface.TransitionTweenInfo.In, Interface.TransitionGoals.In)
+	local bOutTween = TweenService:Create(TransitionUi.Black, Interface.TransitionTweenInfo.Out, Interface.TransitionGoals.Out)
+	local iconInTween = TweenService:Create(TransitionUi.Icon, Interface.TransitionTweenInfo.In, Interface.TransitionGoals.In)
+	local iconOutTween = TweenService:Create(TransitionUi.Icon, Interface.TransitionTweenInfo.Out, Interface.TransitionGoals.Out)
+
+	TransitionUi.Enabled = true
+	bInTween:Play()
+	bInTween.Completed:Wait()
+	iconInTween:Play()
+	iconInTween.Completed:Wait()
+	task.wait(1)
+	iconOutTween:Play()
+	iconOutTween.Completed:Wait()
+	bOutTween:Play()
+	bOutTween.Completed:Wait()
+	TransitionUi.Black.Position = Interface.TransitionGoals.Default
+	TransitionUi.Icon.Position = Interface.TransitionGoals.Default
+	TransitionUi.Enabled = false
 end
 
 function Interface.InitializeHealthVitals(VitalsUi, fighter1, fighter2) -- Player's Fighter, Opponent's Fighter

@@ -28,7 +28,9 @@ local Animations = {
 	Knockout = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Knockout),
 	
 	Emotes = {
-		Ready = Humanoid:LoadAnimation(Emotes.Ready)
+		Ready = Humanoid:LoadAnimation(Emotes.Ready),
+		Celebrate = Humanoid:LoadAnimation(Emotes.Celebrate),
+		Defeat = Humanoid:LoadAnimation(Emotes.Defeat)
 	},
 	
 	Punches = {
