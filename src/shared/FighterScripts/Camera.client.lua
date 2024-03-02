@@ -73,6 +73,7 @@ RunService.RenderStepped:Connect(function()
 	if angleType == "Spin" then
 		Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
 	elseif angleType == "Ring/Main" then
+
 		Camera.CFrame = CFrame.lookAt(viewObject.Position, HumanoidRootPart.Position)
 	end
 	
