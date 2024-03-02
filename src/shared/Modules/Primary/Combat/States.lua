@@ -2,8 +2,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Functions = require(script.Parent.Functions)
-local Interface = require(ReplicatedStorage.Modules.Primary.Interface)
-local FighterAttributes = require(ReplicatedStorage.Modules.FighterAttributes)
+local Interface = require(ReplicatedStorage.Shared.Modules.Primary.Interface)
+local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttributes)
 
 local KnockedEvent = ReplicatedStorage.Remotes.Ring.Combat.Knocked
 

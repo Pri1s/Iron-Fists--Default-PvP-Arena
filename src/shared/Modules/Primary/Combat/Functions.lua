@@ -3,8 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
-local RaycastHitboxV4 = require(ReplicatedStorage.Modules.Imported.RaycastHitboxV4.Hitbox)
-local FighterAttributes = require(ReplicatedStorage.Modules.FighterAttributes)
+local RaycastHitboxV4 = require(ReplicatedStorage.Shared.Modules.Imported.RaycastHitboxV4.Hitbox)
+local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttributes)
 
 local GetStateFunc = ReplicatedStorage.Remotes.States.Get
 local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
@@ -121,7 +121,7 @@ function Functions.Damage(Player, attackType, animLength)
 		local opponentState = GetStateFunc:InvokeClient(Enemy)
 		
 		local function Knock(knockType)
-			MovementEnabled:FireAllClients("Disable")
+			ControlsEnabled:FireAllClients("Disable")
 			TransitionStateEvent:FireClient(Player, "Default", nil)
 			TransitionStateEvent:FireClient(Enemy, "Default", knockType)
 			cHumanoid:SetAttribute("HeadVigor", cAttributes.headVigor)

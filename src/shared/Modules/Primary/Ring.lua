@@ -3,8 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeleportService = game:GetService("TeleportService")
 local Debris = game:GetService("Debris")
 
-local Settings = require(ReplicatedStorage.Modules.Settings)
-local FighterAttributes = require(ReplicatedStorage.Modules.FighterAttributes)
+local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
+local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttributes)
 
 local GetStateFunc = ReplicatedStorage.Remotes.States.Get
 local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
@@ -135,8 +135,10 @@ function Ring:Spawn()
 end
 
 function Ring:Intro()
+	print("Ring:Intro()")
 	IntroEvent:FireClient(self.playerData.player1.Player, "Player1")
 	IntroEvent:FireClient(self.playerData.player2.Player, "Player2")
+	print("IntroEvent:FireAllClients()")
 	TransitionStateEvent:FireAllClients("Default", "Ready")
 	task.wait(Settings.Delays.introTime)
 	self:InitializeRound()

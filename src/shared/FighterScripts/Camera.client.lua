@@ -22,10 +22,10 @@ local spinAngles = cameraAngles:WaitForChild("Spin")
 local spinCamera = spinAngles:WaitForChild("Camera")
 local spinTarget = spinAngles:WaitForChild("Target")
 
-loopedAngleData = {
-	Type = "Spin",
-	Angle = nil
-}
+local loopView = true
+local angleType = "Spin"
+local viewObject = nil
+local viewTarget = nil
 
 local cameraTweenInfo = TweenInfo.new(
 	0.5,
@@ -37,7 +37,9 @@ Camera.CameraType = Enum.CameraType.Scriptable
 Camera.FieldOfView = 30
 
 IntroEvent.OnClientEvent:Connect(function(playerOrder)
-	loopedAngleData.Type = nil
+	print("IntroEvent.OnClientEvent()")
+	loopView = false
+  angleType = "Static"
 	TweenService:Create(Camera, cameraTweenInfo, {CFrame = introAngles[playerOrder].CFrame}):Play()
 	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 50}):Play()
 end)
@@ -45,28 +47,33 @@ end)
 CompletionEvent.OnClientEvent:Connect(function()
 	local goalLookAt = Vector3.new(centerAngle.Position.X, roundAngles.Main.Position.Y - 2, centerAngle.Position.Z)
 	local goalAngle = CFrame.lookAt(ringAngles.Round.Main.Position, goalLookAt)
-	loopedAngleData.Type = nil
+	loopView = false
+  angleType = "Static"
 	TweenService:Create(Camera, cameraTweenInfo, {CFrame = goalAngle}):Play()
 	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 30}):Play()
 end)
 
 ToggleCamera.OnClientEvent:Connect(function(Enabled, cameraAngle)
 	local roundAngleTween = TweenService:Create(Camera, cameraTweenInfo, {CFrame = CFrame.lookAt(roundAngles[cameraAngle].Position, HumanoidRootPart.Position)})
+	local fieldOfViewTween = TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40})
 	roundAngleTween:Play()
-	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40}):Play()
+	fieldOfViewTween:Play()
+	local initial = tick()
+	print("round angle tween started.")
 	roundAngleTween.Completed:Wait()
-	loopedAngleData.Type = "Ring/Main"
-	loopedAngleData.Angle = roundAngles[cameraAngle]
+	print("round angle tween duration: ", tostring(tick() - initial))
+	loopView = true
+  angleType = "Follow"
+  viewObject = roundAngles[cameraAngle]
 end)
 
 RunService.RenderStepped:Connect(function()
-	if not loopedAngleData.Type then return end
+	if not loopView then return end
 	
-	if loopedAngleData.Type == "Spin" then
+	if angleType == "Spin" then
 		Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
-	elseif loopedAngleData.Type == "Ring/Main" then
-		Camera.CFrame = CFrame.lookAt(loopedAngleData.Angle.Position, HumanoidRootPart.Position)
+	elseif angleType == "Ring/Main" then
+		Camera.CFrame = CFrame.lookAt(viewObject.Position, HumanoidRootPart.Position)
 	end
 	
 end)
-

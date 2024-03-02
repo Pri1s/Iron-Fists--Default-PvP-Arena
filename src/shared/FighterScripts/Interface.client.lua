@@ -1,7 +1,7 @@
 local Players_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
-local Interface = require(ReplicatedStorage.Modules.Primary.Interface)
+local Interface = require(ReplicatedStorage.Shared.Modules.Primary.Interface)
 
 local Player = Players_Service.LocalPlayer
 local PlayerGui = Player.PlayerGui

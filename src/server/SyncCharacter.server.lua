@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CharacterEvent = ReplicatedStorage.Remotes.TeleportAsync.Character
 
 for _, Character in ipairs(ReplicatedStorage.Characters:GetChildren()) do
-	ReplicatedStorage.FighterScripts:Clone().Parent = Character
+	ReplicatedStorage.Shared.FighterScripts:Clone().Parent = Character
 	ReplicatedStorage.CharacterObjects.Sounds:Clone().Parent = Character.HumanoidRootPart
 end
 

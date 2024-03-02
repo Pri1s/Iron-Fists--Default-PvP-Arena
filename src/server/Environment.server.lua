@@ -7,5 +7,5 @@ while task.wait() do
 	local angle = time() * angularSpeed
 	local x = centerObject.Position.X + radius * math.cos(angle)
 	local z = centerObject.Position.Z + radius * math.sin(angle)  -- Maintain original Y height
-	spinCamera.CFrame = CFrame.new(x, part.Position.Y, z)  -- Set CFrame relative to center object
+	spinCamera.CFrame = CFrame.new(x, spinCamera.Position.Y, z)  -- Set CFrame relative to center object
 end

@@ -1,3 +1,4 @@
+--[[
 local Players_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -8,14 +9,13 @@ local Player = Players_Service.LocalPlayer
 local PlayerGui = Player.PlayerGui
 local teleportData = TeleportService:GetLocalPlayerTeleportData()
 
-local Settings = require(ReplicatedStorage.Modules.Settings)
+local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
 local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
 
 local TaleOfTapeUi = PlayerGui:WaitForChild("TaleOfTape")
-local mainFrame = script.Parent.Main
+local mainFrame = TaleOfTapeUi.Main
 local characterOneViewport = mainFrame.Fighters[teleportData.player1.characterString]--:Clone()
 local characterTwoViewport = mainFrame.Fighters[teleportData.player2.characterString]--:Clone()
-
 local taleOfTapeTransitionTweenInfo = TweenInfo.new(
 	0.25,
 	Enum.EasingStyle.Quad,
@@ -45,11 +45,14 @@ task.wait(Settings.Delays.loadToT)
 PositionCharacterViewports()
 TaleOfTapeUi.Enabled = true
 TweenService:Create(mainFrame, taleOfTapeTransitionTweenInfo, {Size = mainFrame:GetAttribute("ExpandSize")}):Play()
+print("Enabled ToT!")
 
 IntroEvent.OnClientEvent:Connect(function()
 	local collapseTween = TweenService:Create(mainFrame, taleOfTapeTransitionTweenInfo, {Size = UDim2.new(0, 0, 0 ,0)})
 	collapseTween:Play()
 	collapseTween.Completed:Wait()
 	TaleOfTapeUi.Enabled = false
+	print("Collapsed ToT!")
 end)
+]]
 

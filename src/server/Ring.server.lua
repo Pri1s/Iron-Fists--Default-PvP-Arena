@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Settings = require(ReplicatedStorage.Modules.Settings)
-local Ring = require(ReplicatedStorage.Modules.Primary.Ring)
+local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
+local Ring = require(ReplicatedStorage.Shared.Modules.Primary.Ring)
 local GetPlayerData = ReplicatedStorage.Remotes.TeleportAsync.PlayerData
 local KnockedEvent = ReplicatedStorage.Remotes.Ring.Combat.Knocked
 
