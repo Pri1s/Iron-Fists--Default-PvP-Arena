@@ -59,7 +59,7 @@ function Functions.BlockStamina(self)
 	Bar.Size = UDim2.new(Bar.Size.X.Scale + self.Attributes.dvStaminaRegen, 0, 1, 0)
 end
 
-function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations)
+function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations, Target)
 	local Track = Animations.Punches[substate]
 	local animLength = Track.Length
 	local dbLength = animLength / 2
@@ -73,7 +73,7 @@ function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations)
 	
 	Humanoid.WalkSpeed = Humanoid.WalkSpeed / 2
 	Track:Play()
-	AttackEvent:FireServer(substate, animLength)
+	AttackEvent:FireServer(Target, substate, animLength)
 	task.wait(dbLength)
 	Humanoid.WalkSpeed = oldSpeed
 end
@@ -98,7 +98,7 @@ function Functions.DrainBlock(Bar, Drain)
 	return blockBroken
 end
 
-function Functions.Damage(Player, attackType, animLength)
+function Functions.Damage(Player, Target, attackType, animLength)
 	local Character = Player.Character
 	local cHumanoid = Character.Humanoid
 	local cAttributes = FighterAttributes[cHumanoid:GetAttribute("Fighter")]
@@ -115,15 +115,15 @@ function Functions.Damage(Player, attackType, animLength)
 	end)
 	
 	Hitbox.OnHit:Connect(function(Hit, Humanoid)
-		local Enemy = Players_Service:GetPlayerFromCharacter(Humanoid.Parent)
-		local Opponent = Enemy.Character
+		local Opponent = Players_Service:GetPlayerFromCharacter(Humanoid.Parent)
+		local oCharacter = Opponent.Character
 		local oAttributes = FighterAttributes[Humanoid:GetAttribute("Fighter")]
-		local opponentState = GetStateFunc:InvokeClient(Enemy)
+		local oState = GetStateFunc:InvokeClient(Enemy)
 		
 		local function Knock(knockType)
 			ControlsEnabled:FireAllClients("Disable")
 			TransitionStateEvent:FireClient(Player, "Default", nil)
-			TransitionStateEvent:FireClient(Enemy, "Default", knockType)
+			TransitionStateEvent:FireClient(Opponent, "Default", knockType)
 			cHumanoid:SetAttribute("HeadVigor", cAttributes.headVigor)
 			cHumanoid:SetAttribute("BodyVigor", cAttributes.bodyVigor)
 			Humanoid:SetAttribute("HeadVigor", oAttributes.headVigor)
@@ -134,19 +134,19 @@ function Functions.Damage(Player, attackType, animLength)
 			print(Humanoid:GetAttribute(humVigor) - cAttributes.Damage)
 			Humanoid:SetAttribute(humVigor, Humanoid:GetAttribute(humVigor) - cAttributes.Damage)
 			UpdateHealth:FireClient(Player, "Player", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
-			UpdateHealth:FireClient(Enemy, "Opponent", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
+			UpdateHealth:FireClient(Opponent, "Opponent", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
 		end
 		
-		if Opponent == Character then return end
-		if (Opponent.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude > 5 then return end
+		if oCharacter == Character then return end
+		if (oCharacter.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude > 5 then return end
 		
-		if opponentState == "Block" then
-			DrainBlockEvent:FireClient(Enemy, Humanoid:GetAttribute("BlockDrain"))
+		if oState == "Block" then
+			DrainBlockEvent:FireClient(Opponent, Humanoid:GetAttribute("BlockDrain"))
 		else
 			print(Player.Name, " hit ", Opponent.Name, " with a", attackType)
 			Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Punches[attackType]):Play()
-			
-			if attackType == "Uppercut" then
+
+			if Target == "Head" or attackType == "Uppercut" then
 				Damage("HeadVigor", "headVigor")
 			else
 				Damage("BodyVigor", "bodyVigor")

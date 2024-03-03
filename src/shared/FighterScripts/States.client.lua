@@ -2,6 +2,7 @@ local Players_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
+local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
 local States = require(ReplicatedStorage.Shared.Modules.Primary.Combat.States)
 local Functions = require(ReplicatedStorage.Shared.Modules.Primary.Combat.Functions)
 local Interface = require(ReplicatedStorage.Shared.Modules.Primary.Interface)
@@ -17,6 +18,7 @@ local Humanoid = Character:WaitForChild("Humanoid")
 local GetStateFunc = ReplicatedStorage.Remotes.States.Get
 local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
 local DrainBlock = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Stamina["Block/Drain"]
+local OpponentData = ReplicatedStorage.Remotes.Ring.Other["Opponent/Data"]
 
 local Emotes = ReplicatedStorage.Animations.Emotes
 local punchAnimations = ReplicatedStorage.Animations.Punches
@@ -56,7 +58,7 @@ Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
 Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
 
 repeat task.wait() until #Players_Service:GetChildren() >= 2
-task.wait(3)
+task.wait(Settings.Delays.initializeMatch)
 
 for _, v in ipairs(Players_Service:GetChildren()) do
 	
@@ -111,6 +113,14 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 		end
 		
 		Cooldowns.Uppercut.previousInputTime = tick()
+	elseif input.KeyCode == Enum.KeyCode.Space then
+		
+		if stateEngine:GetState() == "Idle" then
+			if stateEngine.Target == "Head" then return end
+			warn("Targetting the Head!")
+			stateEngine:UpdateTarget("Head")
+		end
+
 	end
 	
 end)
@@ -123,7 +133,14 @@ UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
 		if stateEngine:GetState() == "Block" then
 			stateEngine:Transition("Idle")
 		end
+
+	elseif input.KeyCode == Enum.KeyCode.Space then
 		
+		if stateEngine:GetState() == "Idle" then
+			warn("Stopped targetting the Head")
+			stateEngine:UpdateTarget("Head")
+		end
+
 	end
 	
 end)

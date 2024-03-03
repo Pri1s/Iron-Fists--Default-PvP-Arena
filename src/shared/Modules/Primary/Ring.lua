@@ -8,6 +8,7 @@ local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttrib
 
 local GetStateFunc = ReplicatedStorage.Remotes.States.Get
 local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
+local OpponentData = ReplicatedStorage.Remotes.Ring.Other["Opponent/Data"]
 
 local InitializeViewports = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.Initialize
 local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
@@ -110,6 +111,9 @@ function Ring:Initialize(playerData)
 		end
 		
 	end
+
+	OpponentData:FireClient(self.playerData.player1.Player, self.playerData.player2.Player)
+	OpponentData:FireClient(self.playerData.player2.Player, self.playerData.player1.Player)
 	
 	local character1 = player1.Player.Character
 	local character2 = player2.Player.Character

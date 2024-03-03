@@ -25,6 +25,7 @@ function States.new(Player, Animations, Attributes)
 	self.currentState = nil
 	self.previousAttack  = nil
 	self.Opponent = nil
+	self.Target = nil
 	
 	return self
 end
@@ -40,6 +41,10 @@ function States:Initialize(Opponent)
 		Functions.BlockStamina(self)
 	end)
 	
+end
+
+function States:GetState()
+	return self.currentState
 end
 
 function States:Transition(newState, substate)
@@ -60,8 +65,8 @@ function States:Transition(newState, substate)
 	
 end
 
-function States:GetState()
-	return self.currentState
+function States:UpdateTarget(Target)
+	self.Target = Target
 end
 
 function States:Reset()
@@ -93,7 +98,7 @@ function States:Default(substate)
 		KnockedEvent:FireServer("Knockdown")
 	elseif substate == "Knockout" then
 		self.Animations.Knockout:Play()
-		task.wait(self.Animations.Knockout.Length - 0.2)
+		task.wait(self.Animations.Knockout.Length - 0.35)
 		KnockedEvent:FireServer("Knockout")
 	end
 	
@@ -119,7 +124,7 @@ end
 
 function States:Attack(substate)
 	self.Animations.Walk:Stop()
-	Functions.Attack(substate, self.VitalsUi, self.Character.Humanoid, self.Attributes, self.Animations)
+	Functions.Attack(substate, self.VitalsUi, self.Character.Humanoid, self.Attributes, self.Animations, self.Target)
 	if self:GetState() == "Attack" then self:Transition("Idle") end
 end
 
