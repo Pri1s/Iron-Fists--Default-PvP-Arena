@@ -3,8 +3,8 @@ local Attributes = {}
 local staminaRegenDenom = 10000
 
 Attributes.LeKing = {
-	headVigor = 100,
-	bodyVigor = 125,
+	headVigor = 250,
+	bodyVigor = 150,
 	MaxSpeed = 4.5,
 	LowSpeed = 1.5,
 	Damage = 17.5,
@@ -17,8 +17,8 @@ Attributes.LeKing = {
 }
 
 Attributes.Paul = {
-	headVigor = 75,
-	bodyVigor = 125,
+	headVigor = 200,
+	bodyVigor = 100,
 	maxSpeed = 6,
 	lowSpeed = 3,
 	Damage = 10,

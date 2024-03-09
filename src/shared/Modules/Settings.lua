@@ -1,5 +1,6 @@
 local Settings = {}
 
+Settings.requiredQueuers = 2
 Settings.Rounds = 6
 Settings.homeId = 15853147715
 
@@ -7,7 +8,7 @@ Settings.Delays = {
 	Default = 0.15,
 	Transition = 1,
 	loadToT = 3,
-	initializeMatch = 5,
+	initializeMatch = 7,
 	introTime = 3
 }
 

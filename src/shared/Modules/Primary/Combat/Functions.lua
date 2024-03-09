@@ -9,8 +9,9 @@ local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttrib
 local GetStateFunc = ReplicatedStorage.Remotes.States.Get
 local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
 local ControlsEnabled = ReplicatedStorage.Remotes.Ring.Other["Controls/Enabled"]
-local UpdateHealth = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.Update
+local IKController = ReplicatedStorage.Remotes.Ring.Combat.IKController
 local AttackEvent = ReplicatedStorage.Remotes.Ring.Combat.Attack
+local UpdateHealth = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.Update
 local DrainBlockEvent = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Stamina["Block/Drain"]
 
 local Functions = {}
@@ -19,7 +20,7 @@ function Functions.LockOrientation(self)
 	
 	if self.Opponent and self:GetState() ~= "Default" then
 		local HumanoidRootPart = self.Character.HumanoidRootPart
-		local OpponentRootPart = self.Opponent:WaitForChild("HumanoidRootPart")
+		local OpponentRootPart = self.Opponent.Character:WaitForChild("HumanoidRootPart")
 		local targetAngle = Vector3.new(OpponentRootPart.Position.X, HumanoidRootPart.Position.Y, OpponentRootPart.Position.Z)
 
 		if not HumanoidRootPart:FindFirstChild("BodyGyro") then
@@ -59,6 +60,17 @@ function Functions.BlockStamina(self)
 	Bar.Size = UDim2.new(Bar.Size.X.Scale + self.Attributes.dvStaminaRegen, 0, 1, 0)
 end
 
+function Functions.EnableIKControl(self, Enabled)
+
+	if Enabled then
+		self:UpdateTarget("Head")
+	else
+		self:UpdateTarget("Body")
+	end
+
+	IKController:FireServer(Enabled, self.Opponent.UserId)
+end
+
 function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations, Target)
 	local Track = Animations.Punches[substate]
 	local animLength = Track.Length
@@ -79,23 +91,39 @@ function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations, 
 end
 
 function Functions.DrainBlock(Bar, Drain)
-	print("Bar.Size.X.Scale: ", tostring(Bar.Size.X.Scale))
-	print("Drain: ", Drain)
-	print("barLength: ", Bar.Size.X.Scale - Drain)
-	local barLength = Bar.Size.X.Scale - Drain
+	local barLength = Bar.Size.X.Scale - (Drain / 100)
 	local barSize = UDim2.new(barLength, 0, 1, 0)
 	local blockBroken = false
 	
-	if barLength > 0 then
+	if barLength > 0.01 then
 		barSize = UDim2.new(barLength, 0, 1, 0)
 	else
-		warn("blockBroken = true")
 		blockBroken = true
 		barSize = UDim2.new(0, 0, 1, 0)
 	end
 
 	Bar:TweenSize(barSize, Enum.EasingDirection.In, Enum.EasingStyle.Linear, 0.1)
 	return blockBroken
+end
+
+function Functions.IKController(Player, Enabled, userId)
+	print("IKController")
+	local Character = Player.Character
+	local Humanoid = Character.Humanoid
+	local IKControl = Character.Humanoid.IKControl
+	local Opponent = nil
+
+		for _, player in ipairs(Players_Service:GetChildren()) do
+			if player.UserId ~= userId then continue end
+			Opponent = player
+		end
+
+	if Enabled then
+		IKControl.Target = Opponent.Character.Head
+	else
+		IKControl.Target = Opponent.Character.LowerTorso
+	end
+
 end
 
 function Functions.Damage(Player, Target, attackType, animLength)
@@ -116,13 +144,16 @@ function Functions.Damage(Player, Target, attackType, animLength)
 	
 	Hitbox.OnHit:Connect(function(Hit, Humanoid)
 		local Opponent = Players_Service:GetPlayerFromCharacter(Humanoid.Parent)
-		local oCharacter = Opponent.Character
 		local oAttributes = FighterAttributes[Humanoid:GetAttribute("Fighter")]
-		local oState = GetStateFunc:InvokeClient(Enemy)
+		local oState = GetStateFunc:InvokeClient(Opponent)
 		
 		local function Knock(knockType)
+			Character.Humanoid.IKControl.Enabled = false
+			Character.Humanoid.IKControl.Target = nil
+			Humanoid.IKControl.Enabled = false
+			Humanoid.IKControl.Target = nil
 			ControlsEnabled:FireAllClients("Disable")
-			TransitionStateEvent:FireClient(Player, "Default", nil)
+			TransitionStateEvent:FireClient(Player, "Default", "Disabled")
 			TransitionStateEvent:FireClient(Opponent, "Default", knockType)
 			cHumanoid:SetAttribute("HeadVigor", cAttributes.headVigor)
 			cHumanoid:SetAttribute("BodyVigor", cAttributes.bodyVigor)
@@ -137,8 +168,8 @@ function Functions.Damage(Player, Target, attackType, animLength)
 			UpdateHealth:FireClient(Opponent, "Opponent", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
 		end
 		
-		if oCharacter == Character then return end
-		if (oCharacter.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude > 5 then return end
+		if Opponent.Character == Character then return end
+		if (Opponent.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude > 5 then return end
 		
 		if oState == "Block" then
 			DrainBlockEvent:FireClient(Opponent, Humanoid:GetAttribute("BlockDrain"))
@@ -155,7 +186,7 @@ function Functions.Damage(Player, Target, attackType, animLength)
 			if Humanoid:GetAttribute("HeadVigor") <= 0 then
 				Knock("Knockout")
 			elseif Humanoid:GetAttribute("BodyVigor") <= 0 then
-				Knock("Thump")
+				Knock("Knockdown")
 			end 
 			
 		end

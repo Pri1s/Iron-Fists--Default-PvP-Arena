@@ -6,16 +6,16 @@ local Player = Player_Service.LocalPlayer
 
 local teleportData = TeleportService:GetLocalPlayerTeleportData()
 
-local CharacterEvent = ReplicatedStorage.Remotes.TeleportAsync.Character
-local GetPlayerData = ReplicatedStorage.Remotes.TeleportAsync.PlayerData
+local CharacterData = ReplicatedStorage.Remotes.Setup.Data.Character
+local PlayerData = ReplicatedStorage.Remotes.Setup.Data.Player
 
 if teleportData then
 	
 	for _, playerData in pairs(teleportData) do
 
 		if playerData.playerUserId == Player.UserId then
-			CharacterEvent:FireServer(playerData.characterString)
-			GetPlayerData:FireServer(playerData)
+			CharacterData:FireServer(playerData.characterString)
+			PlayerData:FireServer(playerData)
 		end
 		
 	end

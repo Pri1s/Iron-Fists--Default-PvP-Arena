@@ -1,12 +1,27 @@
+local Player_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CharacterEvent = ReplicatedStorage.Remotes.TeleportAsync.Character
+local CharacterData = ReplicatedStorage.Remotes.Setup.Data.Character
 
 for _, Character in ipairs(ReplicatedStorage.Characters:GetChildren()) do
 	ReplicatedStorage.Shared.FighterScripts:Clone().Parent = Character
 	ReplicatedStorage.CharacterObjects.Sounds:Clone().Parent = Character.HumanoidRootPart
 end
 
-CharacterEvent.OnServerEvent:Connect(function(Player, characterName)
+Player_Service.PlayerAdded:Connect(function(Player)
+	
+	Player.CharacterAdded:Connect(function(Character)
+		local IKControl = Instance.new("IKControl", Character.Humanoid)
+		warn("instanced IKControl for ", Player.Name)
+		IKControl.Type = Enum.IKControlType.LookAt
+		IKControl.EndEffector = Character.Head
+		IKControl.ChainRoot = Character.UpperTorso
+		IKControl.Weight = 1
+		IKControl.SmoothTime = 0.1
+	end)
+
+end)
+
+CharacterData.OnServerEvent:Connect(function(Player, characterName)
 	repeat task.wait() until ReplicatedStorage.Characters[characterName]:FindFirstChild("FighterScripts")
 	
 	local Character = Player.Character

@@ -33,6 +33,7 @@ end
 function States:Initialize(Opponent)
 	print("Initialized")
 	self.Opponent = Opponent
+	self.Target = "Body"
 	self:Transition("Default", nil)
 	
 	RunService.RenderStepped:Connect(function()
@@ -81,10 +82,8 @@ end
 function States:Default(substate)
 	self.Animations.Walk:Stop()
 	self.Animations.Block:Stop()
-	
-	if self.previousState == "Block" then
-		Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, false)
-	end
+	if self.Target == "Head" then Functions.EnableIKControl(self, false) end
+	if self.previousState == "Block" then Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, false) end
 	
 	if substate == "Ready" then
 		self.Animations.Emotes.Ready:Play()
@@ -92,30 +91,31 @@ function States:Default(substate)
 		self.Animations.Emotes.Celebrate:Play()
 	elseif substate == "Defeat" then
 		self.Animations.Emotes.Defeat:Play()
-	elseif substate == "Thump" then
+	elseif substate == "Knockdown" then
 		self.Animations.Thump:Play()
-		task.wait(self.Animations.Thump.Length)
+		print("Knock animation length: ", tostring(self.Animations.Thump.Length))
+		task.wait(self.Animations.Thump.Length - 0.3)
 		KnockedEvent:FireServer("Knockdown")
 	elseif substate == "Knockout" then
 		self.Animations.Knockout:Play()
-		task.wait(self.Animations.Knockout.Length - 0.35)
+		print("Knock animation length: ", tostring(self.Animations.Knockout.Length))
+		task.wait(self.Animations.Knockout.Length - 0.45)
 		KnockedEvent:FireServer("Knockout")
+	elseif substate == "Disabled" then
+		if self.previousState ~= "Default" then self.Animations.Walk:Play() end
 	end
 	
 end
 
 function States:Idle()
+	self.Animations.Block:Stop()
+	self.Animations.Walk:Play()
 	
 	if self.previousState == "Default" then
 		self.VitalsUi.Enabled = true
 		self.TimeUi.Enabled = true
 		self:Reset()
-	end
-	
-	self.Animations.Block:Stop()
-	self.Animations.Walk:Play()
-	
-	if self.previousState == "Block" then
+	elseif self.previousState == "Block" then
 		self.Character.Humanoid.WalkSpeed = self.Character.Humanoid.WalkSpeed * 2
 		Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, false)
 	end

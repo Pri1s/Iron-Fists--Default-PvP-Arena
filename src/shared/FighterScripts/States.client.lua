@@ -7,18 +7,20 @@ local States = require(ReplicatedStorage.Shared.Modules.Primary.Combat.States)
 local Functions = require(ReplicatedStorage.Shared.Modules.Primary.Combat.Functions)
 local Interface = require(ReplicatedStorage.Shared.Modules.Primary.Interface)
 
+local GetStateFunc = ReplicatedStorage.Remotes.States.Get
+local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
+local DrainBlock = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Stamina["Block/Drain"]
+local OpponentData = ReplicatedStorage.Remotes.Ring.Other["Opponent/Data"]
+
 local Player = Players_Service.LocalPlayer
 local PlayerGui = Player.PlayerGui
 local VitalsUi = PlayerGui:WaitForChild("Vitals")
 local TimeUi = PlayerGui:WaitForChild("Time")
 
 local Character = Player.Character
-local Humanoid = Character:WaitForChild("Humanoid")
-
-local GetStateFunc = ReplicatedStorage.Remotes.States.Get
-local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
-local DrainBlock = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Stamina["Block/Drain"]
-local OpponentData = ReplicatedStorage.Remotes.Ring.Other["Opponent/Data"]
+local Humanoid = Character.Humanoid
+local Head = Character.Head
+local UpperTorso = Character.UpperTorso
 
 local Emotes = ReplicatedStorage.Animations.Emotes
 local punchAnimations = ReplicatedStorage.Animations.Punches
@@ -63,8 +65,7 @@ task.wait(Settings.Delays.initializeMatch)
 for _, v in ipairs(Players_Service:GetChildren()) do
 	
 	if v:IsA("Player") and v.UserId ~= Player.UserId then
-		repeat task.wait() until v.Character
-		stateEngine:Initialize(v.Character)
+		stateEngine:Initialize(v)
 	end
 	
 end
@@ -74,13 +75,10 @@ UserInputService.MouseIconEnabled = false
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 	if gameProcessedEvent then return end
 	
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.KeyCode == Enum.KeyCode.ButtonX then
+		if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 		
 		if stateEngine:GetState() == "Idle" then
-			print(VitalsUi.Stamina.Offensive.Bar.Size.X.Scale)
-			print(stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina)
-			print(VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina))
-			if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 			
 			if not stateEngine.previousAttack or stateEngine.previousAttack ~= "Jab" then
 				stateEngine:Transition("Attack", "Jab")
@@ -90,21 +88,21 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 			
 		end
 		
-	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 or input.KeyCode == Enum.KeyCode.ButtonL2 then
 		if VitalsUi.Stamina.Block.BarSlot.Bar.Size.X.Scale - (stateEngine.Attributes.dvStaminaDrain / stateEngine.Attributes.dvStamina) <= 0 then return end
 		
 		if stateEngine:GetState() == "Idle" then
 			stateEngine:Transition("Block")
 		end
 		
-	elseif input.KeyCode == Enum.KeyCode.E then
+	elseif input.KeyCode == Enum.KeyCode.E or input.KeyCode == Enum.KeyCode.ButtonB then
 		if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 
 		if stateEngine:GetState() == "Idle" then
 			stateEngine:Transition("Attack", "Hook")
 		end
 		
-	elseif input.KeyCode == Enum.KeyCode.F then
+	elseif input.KeyCode == Enum.KeyCode.F or input.KeyCode == Enum.KeyCode.ButtonY then
 		if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 		if tick() - Cooldowns.Uppercut.previousInputTime < Cooldowns.Uppercut.Duration then return end
 
@@ -113,12 +111,12 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 		end
 		
 		Cooldowns.Uppercut.previousInputTime = tick()
-	elseif input.KeyCode == Enum.KeyCode.Space then
+	elseif input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonL1 then
+		if stateEngine.Target == "Head" then return end
 		
 		if stateEngine:GetState() == "Idle" then
-			if stateEngine.Target == "Head" then return end
 			warn("Targetting the Head!")
-			stateEngine:UpdateTarget("Head")
+			Functions.EnableIKControl(stateEngine, true)
 		end
 
 	end
@@ -128,19 +126,14 @@ end)
 UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
 	if gameProcessedEvent then return end
 	
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+	if input.UserInputType == Enum.UserInputType.MouseButton2 or input.KeyCode == Enum.KeyCode.ButtonL2 then
 		
 		if stateEngine:GetState() == "Block" then
 			stateEngine:Transition("Idle")
 		end
 
-	elseif input.KeyCode == Enum.KeyCode.Space then
-		
-		if stateEngine:GetState() == "Idle" then
-			warn("Stopped targetting the Head")
-			stateEngine:UpdateTarget("Head")
-		end
-
+	elseif input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonL1 then
+		Functions.EnableIKControl(stateEngine, false)
 	end
 	
 end)

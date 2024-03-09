@@ -31,13 +31,13 @@ function Ring.new()
 		player1 = {
 			Player = "N/A",
 			Fighter = "N/A",
-			Wins = 0
+			Knockdowns = 0
 		},
 		
 		player2 = {
 			Player = "N/A",
 			Fighter = "N/A",
-			Wins = 0
+			Knockdowns = 0
 		}
 		
 	}
@@ -150,10 +150,14 @@ function Ring:Intro()
 end
 
 function Ring:InitializeRound()
+	local player1 = self.playerData.player1
+	local player2 = self.playerData.player2
 	self.Status = "Round/Initialize"
 	self.Round = self.Round + 1
-	InitializeViewports:FireClient(self.playerData.player1.Player, self.playerData.player1.Fighter, self.playerData.player2.Fighter)
-	InitializeViewports:FireClient(self.playerData.player2.Player, self.playerData.player2.Fighter, self.playerData.player1.Fighter)
+	player1.Player.Character.Humanoid.IKControl.Enabled = true
+	player2.Player.Character.Humanoid.IKControl.Enabled = true
+	InitializeViewports:FireClient(player1.Player, self.playerData.player1.Fighter, self.playerData.player2.Fighter)
+	InitializeViewports:FireClient(player2.Player, self.playerData.player2.Fighter, self.playerData.player1.Fighter)
 	ToggleCamera:FireAllClients(true, "Main")
 	ControlsEnabled:FireAllClients("Enable")
 	TransitionStateEvent:FireAllClients("Idle", nil)
@@ -192,13 +196,19 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
 			for _, Data in pairs(self.playerData) do
 
 				if Data.Player == victorByVigor then
-					Data.Wins = Data.Wins + 1
+					Data.Knockdowns = Data.Knockdowns + 1
 				end
 
 			end
 			
 		end
 		
+	end
+
+	local function Complete(victorByKnockout, loserByKnockout)
+		TransitionEvent:FireAllClients()
+		task.wait(Settings.Delays.Transition - 0.4)
+		self:Complete(victorByKnockout, loserByKnockout)
 	end
 	
 	self.Status = "Round/Complete"
@@ -210,7 +220,7 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
 		for _, Data in pairs(self.playerData) do
 
 			if Data.Player == Victor then
-				Data.Wins = Data.Wins + 1
+				Data.Knockdowns = Data.Knockdowns + 1
 			end
 
 		end
@@ -220,17 +230,19 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
 	end
 	
 	if self.Round < Settings.Rounds and victoryType ~= "Knockout" then
-		TransitionEvent:FireAllClients()
-		task.wait(Settings.Delays.Transition)
-		self:Spawn()
+
+		if self.playerData.player1.Knockdowns >= 3 or self.playerData.player2.Knockdowns >= 3 then
+			Complete(nil, nil)
+		else
+			TransitionEvent:FireAllClients()
+			task.wait(Settings.Delays.Transition)
+			self:Spawn()
+		end
+
 	elseif self.Round >= Settings.Rounds and victoryType ~= "Knockout" then
-		TransitionEvent:FireAllClients()
-		task.wait(Settings.Delays.Transition - 0.4)
-		self:Complete(nil)
+		Complete(nil, nil)
 	elseif victoryType == "Knockout" then
-		TransitionEvent:FireAllClients()
-		task.wait(Settings.Delays.Transition - 0.4)
-		self:Complete(Victor, Opponent)
+		Complete(Victor, Opponent)
 	end
 	
 end
@@ -246,7 +258,7 @@ function Ring:Complete(victorByKnockout, loserByKnockout)
 		Opponent = loserByKnockout
 	else
 		
-		if player1.Wins > player2.Wins then
+		if player1.Knockdowns > player2.Knockdowns then
 			Victor = player1.Player
 			Opponent = player2.Player
 		else
@@ -256,14 +268,15 @@ function Ring:Complete(victorByKnockout, loserByKnockout)
 		
 	end
 	
-	Victor.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Victor.CFrame
-	Opponent.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Opponent.CFrame
 	InterfaceEnabled:FireAllClients(false, "Transition")
 	TransitionStateEvent:FireClient(Victor, "Default", "Celebration")
 	TransitionEvent:FireClient(Opponent, "Default", "Defeat")
-	task.wait(Settings.Delays.Transition - 0.4)
+	task.wait(Settings.Delays.Default)
+	Victor.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Victor.CFrame
+	Opponent.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Opponent.CFrame
+	task.wait(Settings.Delays.Transition - 0.25)
 	CompletionEvent:FireAllClients()
-	--TeleportService:TeleportAsync(Settings.homeId, {Victor, Opponent}, nil)
+	TeleportService:TeleportAsync(Settings.homeId, {Victor, Opponent}, nil)
 end
 
 
