@@ -23,9 +23,9 @@ function States.new(Player, Animations, Attributes)
 	
 	self.previousState = nil
 	self.currentState = nil
-	self.previousAttack  = nil
 	self.Opponent = nil
 	self.Target = nil
+	self.currentJab = 1
 	
 	return self
 end
@@ -73,9 +73,7 @@ end
 function States:Reset()
 	self.VitalsUi.Stamina.Offensive.Bar.Size = UDim2.new(1, 0, 1, 0)
 	self.VitalsUi.Stamina.Block.BarSlot.Bar.Size = UDim2.new(1, 0, 1, 0)
-	self.VitalsUi.Health.Player.HeadVigor.Bar.Size = UDim2.new(1, 0, 1, 0)
 	self.VitalsUi.Health.Player.BodyVigor.Bar.Size = UDim2.new(1, 0, 1, 0)
-	self.VitalsUi.Health.Opponent.HeadVigor.Bar.Size = UDim2.new(1, 0, 1, 0)
 	self.VitalsUi.Health.Opponent.BodyVigor.Bar.Size = UDim2.new(1, 0, 1, 0)
 end
 
@@ -124,7 +122,7 @@ end
 
 function States:Attack(substate)
 	self.Animations.Walk:Stop()
-	Functions.Attack(substate, self.VitalsUi, self.Character.Humanoid, self.Attributes, self.Animations, self.Target)
+	Functions.Attack(substate, self)
 	if self:GetState() == "Attack" then self:Transition("Idle") end
 end
 

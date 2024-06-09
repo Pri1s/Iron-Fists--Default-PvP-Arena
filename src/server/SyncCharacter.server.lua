@@ -3,8 +3,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CharacterData = ReplicatedStorage.Remotes.Setup.Data.Character
 
 for _, Character in ipairs(ReplicatedStorage.Characters:GetChildren()) do
-	ReplicatedStorage.Shared.FighterScripts:Clone().Parent = Character
-	ReplicatedStorage.CharacterObjects.Sounds:Clone().Parent = Character.HumanoidRootPart
+	local fighterBoolean = Instance.new("BoolValue", Character)
+	fighterBoolean.Name = "Fighter"
+	fighterBoolean.Value = true
+
+	local fighterScripts = ReplicatedStorage.Shared.FighterScripts:Clone()
+	fighterScripts.Parent = Character
+
+	local userServerSounds = ReplicatedStorage.Sounds.User.Server:Clone()
+	userServerSounds.Name = "Sounds"
+	userServerSounds.Parent = Character.HumanoidRootPart
 end
 
 Player_Service.PlayerAdded:Connect(function(Player)

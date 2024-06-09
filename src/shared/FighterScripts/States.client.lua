@@ -19,11 +19,20 @@ local TimeUi = PlayerGui:WaitForChild("Time")
 
 local Character = Player.Character
 local Humanoid = Character.Humanoid
+local Amputation = Humanoid:GetAttribute("Amputation")
 local Head = Character.Head
 local UpperTorso = Character.UpperTorso
 
 local Emotes = ReplicatedStorage.Animations.Emotes
-local punchAnimations = ReplicatedStorage.Animations.Punches
+local punchAnimations
+
+if Amputation == "None" then
+	punchAnimations = ReplicatedStorage.Animations.Punches.Default
+else
+	punchAnimations = ReplicatedStorage.Animations.Punches.Amputation[Amputation]
+end
+
+print("Loaded Punch Animations: ", tostring(punchAnimations))
 
 local Animations = {
 	Walk = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Walk),
@@ -38,8 +47,7 @@ local Animations = {
 	},
 	
 	Punches = {
-		Jab = Humanoid:LoadAnimation(punchAnimations.Jab),
-		Cross = Humanoid:LoadAnimation(punchAnimations.Cross),
+		Jabs = punchAnimations.Jabs,
 		Uppercut = Humanoid:LoadAnimation(punchAnimations.Uppercut),
 		Hook = Humanoid:LoadAnimation(punchAnimations.Hook)
 	}
@@ -58,6 +66,7 @@ local stateEngine = States.new(Player, Animations)
 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
 Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
 
 repeat task.wait() until #Players_Service:GetChildren() >= 2
 task.wait(Settings.Delays.initializeMatch)
@@ -79,13 +88,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 		if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 		
 		if stateEngine:GetState() == "Idle" then
-			
-			if not stateEngine.previousAttack or stateEngine.previousAttack ~= "Jab" then
-				stateEngine:Transition("Attack", "Jab")
-			elseif stateEngine.previousAttack == "Jab" then
-				stateEngine:Transition("Attack", "Cross")
-			end
-			
+			stateEngine:Transition("Attack", "Jab")
 		end
 		
 	elseif input.UserInputType == Enum.UserInputType.MouseButton2 or input.KeyCode == Enum.KeyCode.ButtonL2 then

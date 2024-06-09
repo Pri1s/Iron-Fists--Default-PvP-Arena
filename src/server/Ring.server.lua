@@ -20,9 +20,7 @@ PreloadAsync.OnServerEvent:Connect(function(Player)
 	loadedPlayers = loadedPlayers + 1
 end)
 
-repeat
-	task.wait()
-until loadedPlayers == Settings.requiredQueuers and #Player_Service:GetChildren() >= Settings.requiredQueuers
+repeat task.wait() until loadedPlayers == Settings.requiredQueuers and #Player_Service:GetChildren() >= Settings.requiredQueuers
 
 PreloadAsync:FireAllClients()
 task.wait(Settings.Delays.initializeMatch)

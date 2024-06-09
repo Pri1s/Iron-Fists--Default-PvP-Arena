@@ -69,7 +69,6 @@ function Ring:Count()
 		end
 		
 		local timeString = string.format("%02d:%02d", math.floor(totalSeconds / 60), totalSeconds % 60)
-		print(timeString)
 		CountEvent:FireAllClients(timeString)
 		task.wait(1)
 		totalSeconds = totalSeconds - 1
@@ -105,7 +104,7 @@ function Ring:Initialize(playerData)
 		if Data.playerOrder == "Player1" then
 			player1.Player = Players_Service:FindFirstChild(Data.playerName)
 			player1.Fighter = Data.characterString
-		else
+		elseif Data.playerOrder == "Player2" then
 			player2.Player = Players_Service:FindFirstChild(Data.playerName)
 			player2.Fighter = Data.characterString
 		end
@@ -130,20 +129,15 @@ function Ring:Spawn()
 	local spawn1 = workspace.Ring.Spawns.Round.Player1
 	local spawn2 = workspace.Ring.Spawns.Round.Player2
 	ControlsEnabled:FireAllClients("Disable")
-	print("Positioning...")
-	print(GetStateFunc:InvokeClient(self.playerData.player1.Player))
 	character1Root.CFrame = CFrame.lookAt(spawn1.Position, workspace.CameraAngles.Center.Position)
 	character2Root.CFrame = CFrame.lookAt(spawn2.Position, workspace.CameraAngles.Center.Position)
-	print("Positioned!")
 	task.wait(3)
 	self:Intro()
 end
 
 function Ring:Intro()
-	print("Ring:Intro()")
 	IntroEvent:FireClient(self.playerData.player1.Player, "Player1")
 	IntroEvent:FireClient(self.playerData.player2.Player, "Player2")
-	print("IntroEvent:FireAllClients()")
 	TransitionStateEvent:FireAllClients("Default", "Ready")
 	task.wait(Settings.Delays.introTime)
 	self:InitializeRound()
@@ -152,16 +146,17 @@ end
 function Ring:InitializeRound()
 	local player1 = self.playerData.player1
 	local player2 = self.playerData.player2
+
 	self.Status = "Round/Initialize"
 	self.Round = self.Round + 1
 	player1.Player.Character.Humanoid.IKControl.Enabled = true
 	player2.Player.Character.Humanoid.IKControl.Enabled = true
 	InitializeViewports:FireClient(player1.Player, self.playerData.player1.Fighter, self.playerData.player2.Fighter)
 	InitializeViewports:FireClient(player2.Player, self.playerData.player2.Fighter, self.playerData.player1.Fighter)
-	ToggleCamera:FireAllClients(true, "Main")
+	ToggleCamera:FireAllClients(true, "Round/Static")
 	ControlsEnabled:FireAllClients("Enable")
 	TransitionStateEvent:FireAllClients("Idle", nil)
-	
+	workspace.Ring.Sounds.BeginRound:Play()
 	task.wait(Settings.Delays.Default)
 	
 	task.spawn(function()
@@ -173,7 +168,7 @@ end
 function Ring:CompleteRound(Victor, Opponent, victoryType)
 	
 	local function LeastVigor()
-		local lowestNetVigor = 1 -- Expressed as a percentage
+		local lowestNetVigor = 1
 		local victorByVigor = nil
 		
 		for _, Data in pairs(self.playerData) do
@@ -212,7 +207,6 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
 	end
 	
 	self.Status = "Round/Complete"
-	print("Ring status changed!")
 	
 	if victoryType ~= "Time" then
 		if not Victor then return end

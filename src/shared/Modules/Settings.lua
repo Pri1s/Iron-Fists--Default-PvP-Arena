@@ -21,5 +21,24 @@ Settings.Times = {
 	
 }
 
+Settings.Environment = {
+
+	Camera = {
+
+		Spin = {
+			Radius = 75,
+			angularSpeed = 0.1
+		};
+
+		Dynamic = {
+			FOV = 70,
+			minOffset = 7.5,
+			lerpSpeed = 0.1
+		};
+		
+	}
+	
+}
+
 
 return Settings

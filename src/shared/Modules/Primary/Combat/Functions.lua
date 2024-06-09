@@ -71,8 +71,29 @@ function Functions.EnableIKControl(self, Enabled)
 	IKController:FireServer(Enabled, self.Opponent.UserId)
 end
 
-function Functions.Attack(substate, VitalsUi, Humanoid, Attributes, Animations, Target)
-	local Track = Animations.Punches[substate]
+function Functions.Attack(substate, self)
+	local VitalsUi = self.VitalsUi
+	local Humanoid = self.Character.Humanoid
+	local Attributes = self.Attributes
+	local punchAnimations = self.Animations.Punches
+	local Target = self.Target
+	
+	local Track
+
+	if substate == "Jab" then
+
+		if self.currentJab <= #punchAnimations.Jabs:GetChildren() then
+			Track = Humanoid:LoadAnimation(punchAnimations.Jabs[tostring(self.currentJab)])
+			self.currentJab = self.currentJab + 1
+		else
+			self.currentJab = 1
+			Track = Humanoid:LoadAnimation(punchAnimations.Jabs["1"])
+		end
+
+	else
+		Track = punchAnimations[substate]
+	end
+
 	local animLength = Track.Length
 	local dbLength = animLength / 2
 	
@@ -145,6 +166,7 @@ function Functions.Damage(Player, Target, attackType, animLength)
 	Hitbox.OnHit:Connect(function(Hit, Humanoid)
 		local Opponent = Players_Service:GetPlayerFromCharacter(Humanoid.Parent)
 		local oAttributes = FighterAttributes[Humanoid:GetAttribute("Fighter")]
+		local oSounds = Opponent.Character.HumanoidRootPart.Sounds
 		local oState = GetStateFunc:InvokeClient(Opponent)
 		
 		local function Knock(knockType)
@@ -155,9 +177,7 @@ function Functions.Damage(Player, Target, attackType, animLength)
 			ControlsEnabled:FireAllClients("Disable")
 			TransitionStateEvent:FireClient(Player, "Default", "Disabled")
 			TransitionStateEvent:FireClient(Opponent, "Default", knockType)
-			cHumanoid:SetAttribute("HeadVigor", cAttributes.headVigor)
 			cHumanoid:SetAttribute("BodyVigor", cAttributes.bodyVigor)
-			Humanoid:SetAttribute("HeadVigor", oAttributes.headVigor)
 			Humanoid:SetAttribute("BodyVigor", oAttributes.bodyVigor)
 		end
 		
@@ -170,6 +190,7 @@ function Functions.Damage(Player, Target, attackType, animLength)
 		
 		if Opponent.Character == Character then return end
 		if (Opponent.Character.HumanoidRootPart.Position - Character.HumanoidRootPart.Position).Magnitude > 5 then return end
+		oSounds.Combat.Hit:Play()
 		
 		if oState == "Block" then
 			DrainBlockEvent:FireClient(Opponent, Humanoid:GetAttribute("BlockDrain"))

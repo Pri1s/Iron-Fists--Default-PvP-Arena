@@ -3,6 +3,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
+local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
+local Math = require(ReplicatedStorage.Shared.Modules.Math)
+
 local Player = Players_Service.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -11,21 +14,23 @@ local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
 local CompletionEvent = ReplicatedStorage.Remotes.Ring.Primary.Completion
 
 local Character = Player.Character
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local HumanoidRootPart = Character.HumanoidRootPart
 
-local cameraAngles = workspace:WaitForChild("CameraAngles")
-local centerAngle = cameraAngles:WaitForChild("Center")
-local ringAngles = cameraAngles:WaitForChild("Ring")
-local roundAngles = ringAngles:WaitForChild("Round")
-local introAngles = ringAngles:WaitForChild("Intro")
-local spinAngles = cameraAngles:WaitForChild("Spin")
-local spinCamera = spinAngles:WaitForChild("Camera")
-local spinTarget = spinAngles:WaitForChild("Target")
+local spinCameraSettings = Settings.Environment.Camera.Spin
 
-local loopView = true
-local angleType = "Spin"
-local viewObject = nil
-local viewTarget = nil
+local cameraAngles = workspace.CameraAngles
+local centerAngle = cameraAngles.Center
+local ringAngles = cameraAngles.Ring
+local introAngles = ringAngles.Intro
+local roundAngles = ringAngles.Round
+local dynamicAngle = roundAngles.Dynamic
+local staticAngle = roundAngles.Static
+local spinAngles = cameraAngles.Spin
+local spinCamera = spinAngles.Camera
+local spinTarget = spinAngles.Target
+
+local viewMode = "Spin"
+local dynamicViewObject
 
 local cameraTweenInfo = TweenInfo.new(
 	0.5,
@@ -37,41 +42,46 @@ Camera.CameraType = Enum.CameraType.Scriptable
 Camera.FieldOfView = 30
 
 IntroEvent.OnClientEvent:Connect(function(playerOrder)
-	print("IntroEvent.OnClientEvent()")
-	loopView = false
-  angleType = "Static"
+  viewMode = "Cutscene"
 	TweenService:Create(Camera, cameraTweenInfo, {CFrame = introAngles[playerOrder].CFrame}):Play()
 	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 50}):Play()
 end)
 
 CompletionEvent.OnClientEvent:Connect(function()
-	local goalLookAt = Vector3.new(centerAngle.Position.X, roundAngles.Main.Position.Y - 2, centerAngle.Position.Z)
-	local goalAngle = CFrame.lookAt(ringAngles.Round.Main.Position, goalLookAt)
-	loopView = false
-  angleType = "Static"
+	local goalLookAt = Vector3.new(centerAngle.Position.X, roundAngles.Completion.Position.Y - 2, centerAngle.Position.Z)
+	local goalAngle = CFrame.lookAt(roundAngles.Completion.Position, goalLookAt)
+
+  viewMode = "Cutscene"
 	TweenService:Create(Camera, cameraTweenInfo, {CFrame = goalAngle}):Play()
 	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 30}):Play()
 end)
 
-ToggleCamera.OnClientEvent:Connect(function(Enabled, cameraAngle)
-	local roundAngleTween = TweenService:Create(Camera, cameraTweenInfo, {CFrame = CFrame.lookAt(roundAngles[cameraAngle].Position, HumanoidRootPart.Position)})
-	local fieldOfViewTween = TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40})
-	roundAngleTween:Play()
-	fieldOfViewTween:Play()
-	roundAngleTween.Completed:Wait()
-	loopView = true
-	angleType = "Ring"
-  viewObject = roundAngles[cameraAngle]
-	viewTarget = HumanoidRootPart
+ToggleCamera.OnClientEvent:Connect(function(Looped, cameraMode)
+	local goalAngle
+
+	if cameraMode == "Round/Static" then
+		goalAngle = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
+	end
+
+	local angleTween = TweenService:Create(Camera, cameraTweenInfo, {CFrame = goalAngle})
+	local fovTween = TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40})
+	angleTween:Play()
+	fovTween:Play()
+	angleTween.Completed:Wait()
+
+	viewMode = cameraMode
 end)
 
 RunService.RenderStepped:Connect(function()
-	if not loopView then return end
 	
-	if angleType == "Spin" then
+	if viewMode == "Spin" then
+		local x, z = Math.CircularPath(centerAngle, spinCameraSettings.Radius, spinCameraSettings.angularSpeed)
+		spinCamera.CFrame = CFrame.new(x, spinCamera.Position.Y, z)
 		Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
-	elseif angleType == "Ring" then
-		Camera.CFrame = CFrame.lookAt(viewObject.Position, viewTarget.Position)
+	elseif viewMode == "Round/Static" then
+		Camera.CFrame = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
+	elseif viewMode == "Round/Dynamic" then
+		print("Round/Dynamic")
 	end
 	
 end)
