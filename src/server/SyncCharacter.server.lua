@@ -1,6 +1,6 @@
 local Player_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CharacterData = ReplicatedStorage.Remotes.Setup.Data.Character
+local TeleportData = ReplicatedStorage.Remotes.Setup.TeleportData
 
 for _, Character in ipairs(ReplicatedStorage.Characters:GetChildren()) do
 	local fighterBoolean = Instance.new("BoolValue", Character)
@@ -29,7 +29,8 @@ Player_Service.PlayerAdded:Connect(function(Player)
 
 end)
 
-CharacterData.OnServerEvent:Connect(function(Player, characterName)
+TeleportData.OnServerEvent:Connect(function(Player, playerData)
+	local characterName = playerData.characterString
 	repeat task.wait() until ReplicatedStorage.Characters[characterName]:FindFirstChild("FighterScripts")
 	
 	local Character = Player.Character

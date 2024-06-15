@@ -109,13 +109,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
 		if VitalsUi.Stamina.Offensive.Bar.Size.X.Scale - (stateEngine.Attributes.ofStaminaDrain / stateEngine.Attributes.ofStamina) <= 0 then return end
 		if tick() - Cooldowns.Uppercut.previousInputTime < Cooldowns.Uppercut.Duration then return end
 
-		if stateEngine:GetState() == "Idle" then
+		if stateEngine:GetState() == "Idle" and stateEngine:GetTarget() == "Head" then
 			stateEngine:Transition("Attack", "Uppercut")
+			Cooldowns.Uppercut.previousInputTime = tick()
 		end
-		
-		Cooldowns.Uppercut.previousInputTime = tick()
+
 	elseif input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonL1 then
-		if stateEngine.Target == "Head" then return end
+		if stateEngine:GetTarget() == "Head" then return end
 		
 		if stateEngine:GetState() == "Idle" then
 			warn("Targetting the Head!")

@@ -76,9 +76,10 @@ function Functions.Attack(substate, self)
 	local Humanoid = self.Character.Humanoid
 	local Attributes = self.Attributes
 	local punchAnimations = self.Animations.Punches
-	local Target = self.Target
+	local Target = self:GetTarget()
 	
 	local Track
+	local staminaDrain
 
 	if substate == "Jab" then
 
@@ -94,11 +95,16 @@ function Functions.Attack(substate, self)
 		Track = punchAnimations[substate]
 	end
 
+	if Target == "Body" then
+		staminaDrain = Attributes.ofStaminaDrain / Attributes.ofStamina
+	elseif Target == "Head" then
+		staminaDrain = (Attributes.ofStaminaDrain * Attributes.headshotStaminaDrainMultiplier) / Attributes.ofStamina
+	end
+
 	local animLength = Track.Length
 	local dbLength = animLength / 2
 	
 	local oldSpeed = Humanoid.WalkSpeed
-	local staminaDrain = Attributes.ofStaminaDrain / Attributes.ofStamina
 	
 	local Bar = VitalsUi.Stamina.Offensive.Bar
 	local barSize = UDim2.new(Bar.Size.X.Scale - staminaDrain, 0, 1, 0)
@@ -182,8 +188,7 @@ function Functions.Damage(Player, Target, attackType, animLength)
 		end
 		
 		local function Damage(humVigor, attVigor)
-			print(Humanoid:GetAttribute(humVigor) - cAttributes.Damage)
-			Humanoid:SetAttribute(humVigor, Humanoid:GetAttribute(humVigor) - cAttributes.Damage)
+			Humanoid:SetAttribute(humVigor, Humanoid:GetAttribute(humVigor) - cAttributes.Damage[attackType])
 			UpdateHealth:FireClient(Player, "Player", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
 			UpdateHealth:FireClient(Opponent, "Opponent", humVigor, Humanoid:GetAttribute(humVigor) / oAttributes[attVigor])
 		end

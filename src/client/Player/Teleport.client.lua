@@ -6,16 +6,14 @@ local Player = Player_Service.LocalPlayer
 
 local teleportData = TeleportService:GetLocalPlayerTeleportData()
 
-local CharacterData = ReplicatedStorage.Remotes.Setup.Data.Character
-local PlayerData = ReplicatedStorage.Remotes.Setup.Data.Player
+local Teleport = ReplicatedStorage.Remotes.Setup.TeleportData
 
 if teleportData then
 	
 	for _, playerData in pairs(teleportData) do
 
 		if playerData.playerUserId == Player.UserId then
-			CharacterData:FireServer(playerData.characterString)
-			PlayerData:FireServer(playerData)
+			Teleport:FireServer(playerData)
 		end
 		
 	end

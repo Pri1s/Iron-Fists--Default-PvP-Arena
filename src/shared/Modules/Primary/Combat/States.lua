@@ -33,7 +33,7 @@ end
 function States:Initialize(Opponent)
 	print("Initialized")
 	self.Opponent = Opponent
-	self.Target = "Body"
+	self:UpdateTarget("Body")
 	self:Transition("Default", nil)
 	
 	RunService.RenderStepped:Connect(function()
@@ -58,12 +58,16 @@ function States:Transition(newState, substate)
 	elseif newState == "Idle" then
 		self:Idle()
 	elseif newState == "Attack" then
-		self.previousAttack = substate
+		--self.previousAttack = substate
 		self:Attack(substate)
 	elseif newState == "Block" then
 		self:Block()
 	end
 	
+end
+
+function States:GetTarget()
+	return self.Target
 end
 
 function States:UpdateTarget(Target)
@@ -80,7 +84,7 @@ end
 function States:Default(substate)
 	self.Animations.Walk:Stop()
 	self.Animations.Block:Stop()
-	if self.Target == "Head" then Functions.EnableIKControl(self, false) end
+	if self:GetTarget() == "Head" then Functions.EnableIKControl(self, false) end
 	if self.previousState == "Block" then Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, false) end
 	
 	if substate == "Ready" then
