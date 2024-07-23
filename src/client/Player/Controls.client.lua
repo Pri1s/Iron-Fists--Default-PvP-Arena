@@ -7,11 +7,11 @@ local Controls = require(Player.PlayerScripts:WaitForChild("PlayerModule")):GetC
 local ControlsEnabled = ReplicatedStorage.Remotes.Ring.Other["Controls/Enabled"]
 
 ControlsEnabled.OnClientEvent:Connect(function(Status)
-	
-	if Status == "Disable" then
-		Controls:Disable()
-	else
-		Controls:Enable()
-	end
-	
+
+    if Status == "Disable" then
+        Controls:Disable()
+    else
+        Controls:Enable()
+    end
+
 end)

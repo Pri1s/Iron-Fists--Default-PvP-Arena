@@ -32,56 +32,65 @@ local spinTarget = spinAngles.Target
 local viewMode = "Spin"
 local dynamicViewObject
 
-local cameraTweenInfo = TweenInfo.new(
-	0.5,
-	Enum.EasingStyle.Quad,
-	Enum.EasingDirection.InOut
-)
+local cameraTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
 Camera.CameraType = Enum.CameraType.Scriptable
 Camera.FieldOfView = 30
 
 IntroEvent.OnClientEvent:Connect(function(playerOrder)
-  viewMode = "Cutscene"
-	TweenService:Create(Camera, cameraTweenInfo, {CFrame = introAngles[playerOrder].CFrame}):Play()
-	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 50}):Play()
+    viewMode = "Cutscene"
+    TweenService:Create(Camera, cameraTweenInfo, {
+        CFrame = introAngles[playerOrder].CFrame
+    }):Play()
+    TweenService:Create(Camera, cameraTweenInfo, {
+        FieldOfView = 50
+    }):Play()
 end)
 
 CompletionEvent.OnClientEvent:Connect(function()
-	local goalLookAt = Vector3.new(centerAngle.Position.X, roundAngles.Completion.Position.Y - 2, centerAngle.Position.Z)
-	local goalAngle = CFrame.lookAt(roundAngles.Completion.Position, goalLookAt)
+    local goalLookAt =
+        Vector3.new(centerAngle.Position.X, roundAngles.Completion.Position.Y - 2, centerAngle.Position.Z)
+    local goalAngle = CFrame.lookAt(roundAngles.Completion.Position, goalLookAt)
 
-  viewMode = "Cutscene"
-	TweenService:Create(Camera, cameraTweenInfo, {CFrame = goalAngle}):Play()
-	TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 30}):Play()
+    viewMode = "Cutscene"
+    TweenService:Create(Camera, cameraTweenInfo, {
+        CFrame = goalAngle
+    }):Play()
+    TweenService:Create(Camera, cameraTweenInfo, {
+        FieldOfView = 30
+    }):Play()
 end)
 
 ToggleCamera.OnClientEvent:Connect(function(Looped, cameraMode)
-	local goalAngle
+    local goalAngle
 
-	if cameraMode == "Round/Static" then
-		goalAngle = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
-	end
+    if cameraMode == "Round/Static" then
+        goalAngle = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
+    end
 
-	local angleTween = TweenService:Create(Camera, cameraTweenInfo, {CFrame = goalAngle})
-	local fovTween = TweenService:Create(Camera, cameraTweenInfo, {FieldOfView = 40})
-	angleTween:Play()
-	fovTween:Play()
-	angleTween.Completed:Wait()
+    local angleTween = TweenService:Create(Camera, cameraTweenInfo, {
+        CFrame = goalAngle
+    })
+    local fovTween = TweenService:Create(Camera, cameraTweenInfo, {
+        FieldOfView = 40
+    })
+    angleTween:Play()
+    fovTween:Play()
+    angleTween.Completed:Wait()
 
-	viewMode = cameraMode
+    viewMode = cameraMode
 end)
 
 RunService.RenderStepped:Connect(function()
-	
-	if viewMode == "Spin" then
-		local x, z = Math.CircularPath(centerAngle, spinCameraSettings.Radius, spinCameraSettings.angularSpeed)
-		spinCamera.CFrame = CFrame.new(x, spinCamera.Position.Y, z)
-		Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
-	elseif viewMode == "Round/Static" then
-		Camera.CFrame = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
-	elseif viewMode == "Round/Dynamic" then
-		print("Round/Dynamic")
-	end
-	
+
+    if viewMode == "Spin" then
+        local x, z = Math.CircularPath(centerAngle, spinCameraSettings.Radius, spinCameraSettings.angularSpeed)
+        spinCamera.CFrame = CFrame.new(x, spinCamera.Position.Y, z)
+        Camera.CFrame = CFrame.lookAt(spinAngles.Camera.Position, spinAngles.Target.Position)
+    elseif viewMode == "Round/Static" then
+        Camera.CFrame = CFrame.lookAt(staticAngle.Position, HumanoidRootPart.Position)
+    elseif viewMode == "Round/Dynamic" then
+        print("Round/Dynamic")
+    end
+
 end)

@@ -13,25 +13,29 @@ local playerData = {}
 local loadedPlayers = 0
 
 TeleportData.OnServerEvent:Connect(function(Player, Data)
-	table.insert(playerData, Data)
+    table.insert(playerData, Data)
 end)
 
 AssetsLoaded.OnServerEvent:Connect(function(Player)
-	loadedPlayers = loadedPlayers + 1
+    loadedPlayers = loadedPlayers + 1
 end)
 
-repeat task.wait() until loadedPlayers == Settings.requiredQueuers and #Player_Service:GetChildren() >= Settings.requiredQueuers
+repeat
+    task.wait()
+until loadedPlayers == Settings.requiredQueuers and #Player_Service:GetChildren() >= Settings.requiredQueuers
 
 AssetsLoaded:FireAllClients()
 task.wait(Settings.Delays.initializeMatch)
 myRing:Initialize(playerData)
 
 KnockedEvent.OnServerEvent:Connect(function(Player, knockType)
-	local Victor = nil
+    local Victor = nil
 
-	for _, Data in pairs(myRing.playerData) do
-		if Data.Player ~= Player then Victor = Data.Player end
-	end
+    for _, Data in pairs(myRing.playerData) do
+        if Data.Player ~= Player then
+            Victor = Data.Player
+        end
+    end
 
-	myRing:CompleteRound(Victor, Player, knockType)
+    myRing:CompleteRound(Victor, Player, knockType)
 end)

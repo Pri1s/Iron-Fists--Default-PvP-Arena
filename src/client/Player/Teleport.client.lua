@@ -9,13 +9,13 @@ local teleportData = TeleportService:GetLocalPlayerTeleportData()
 local Teleport = ReplicatedStorage.Remotes.Setup.TeleportData
 
 if teleportData then
-	
-	for _, playerData in pairs(teleportData) do
 
-		if playerData.playerUserId == Player.UserId then
-			Teleport:FireServer(playerData)
-		end
-		
-	end
-	
+    for _, playerData in pairs(teleportData) do
+
+        if playerData.playerUserId == Player.UserId then
+            Teleport:FireServer(playerData)
+        end
+
+    end
+
 end

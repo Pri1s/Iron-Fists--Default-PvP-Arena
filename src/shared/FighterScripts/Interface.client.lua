@@ -18,32 +18,33 @@ local InitializeViewports = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.
 local UpdateHealth = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.Update
 local CountEvent = ReplicatedStorage.Remotes.Ring.Other.Count
 
-repeat task.wait()
+repeat
+    task.wait()
 
-	local disabledReset = pcall(function()
-		StarterGui:SetCore("ResetButtonCallback", false)
-	end)
+    local disabledReset = pcall(function()
+        StarterGui:SetCore("ResetButtonCallback", false)
+    end)
 
 until disabledReset
 
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
 
 InterfaceEnabled.OnClientEvent:Connect(function(Enabled, Exceptions)
-	Interface.DisableUi(PlayerGui, Enabled, Exceptions)
+    Interface.DisableUi(PlayerGui, Enabled, Exceptions)
 end)
 
 TransitionEvent.OnClientEvent:Connect(function()
-	Interface.Transition(TransitionUi)
+    Interface.Transition(TransitionUi)
 end)
 
 InitializeViewports.OnClientEvent:Connect(function(fighter1, fighter2)
-	Interface.InitializeHealthVitals(VitalsUi, fighter1, fighter2)
+    Interface.InitializeHealthVitals(VitalsUi, fighter1, fighter2)
 end)
 
 UpdateHealth.OnClientEvent:Connect(function(playerType, Attribute, Length)
-	Interface.UpdateHealthVitals(VitalsUi, Humanoid, playerType, Attribute, Length)
+    Interface.UpdateHealthVitals(VitalsUi, Humanoid, playerType, Attribute, Length)
 end)
 
 CountEvent.OnClientEvent:Connect(function(Display)
-	TimeUi.Main.TextLabel.Text = Display
+    TimeUi.Main.TextLabel.Text = Display
 end)
