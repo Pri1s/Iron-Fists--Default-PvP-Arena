@@ -9,9 +9,19 @@ local Math = require(ReplicatedStorage.Shared.Modules.Math)
 local Player = Players_Service.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ToggleCamera = ReplicatedStorage.Remotes.Ring.Other.ToggleCamera
-local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
-local CompletionEvent = ReplicatedStorage.Remotes.Ring.Primary.Completion
+local Remotes = {
+
+    Events = {
+        Intro = ReplicatedStorage.Remotes.Events.Ring.Primary.Intro,
+        Completion = ReplicatedStorage.Remotes.Events.Ring.Primary.Completion,
+        toggleCamera = ReplicatedStorage.Remotes.Events.Ring.Other.ToggleCamera
+    },
+
+}
+
+--local Remotes.Events.toggleCamera = ReplicatedStorage.Remotes.Ring.Other.Remotes.Events.toggleCamera
+--local Remotes.Events.Intro = ReplicatedStorage.Remotes.Ring.Primary.Intro
+--local Remotes.Events.Completion = ReplicatedStorage.Remotes.Ring.Primary.Completion
 
 local Character = Player.Character
 local HumanoidRootPart = Character.HumanoidRootPart
@@ -37,7 +47,7 @@ local cameraTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDir
 Camera.CameraType = Enum.CameraType.Scriptable
 Camera.FieldOfView = 30
 
-IntroEvent.OnClientEvent:Connect(function(playerOrder)
+Remotes.Events.Intro.OnClientEvent:Connect(function(playerOrder)
     viewMode = "Cutscene"
     TweenService:Create(Camera, cameraTweenInfo, {
         CFrame = introAngles[playerOrder].CFrame
@@ -47,7 +57,7 @@ IntroEvent.OnClientEvent:Connect(function(playerOrder)
     }):Play()
 end)
 
-CompletionEvent.OnClientEvent:Connect(function()
+Remotes.Events.Completion.OnClientEvent:Connect(function()
     local goalLookAt =
         Vector3.new(centerAngle.Position.X, roundAngles.Completion.Position.Y - 2, centerAngle.Position.Z)
     local goalAngle = CFrame.lookAt(roundAngles.Completion.Position, goalLookAt)
@@ -61,7 +71,7 @@ CompletionEvent.OnClientEvent:Connect(function()
     }):Play()
 end)
 
-ToggleCamera.OnClientEvent:Connect(function(Looped, cameraMode)
+Remotes.Events.toggleCamera.OnClientEvent:Connect(function(Looped, cameraMode)
     local goalAngle
 
     if cameraMode == "Round/Static" then

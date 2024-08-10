@@ -2,11 +2,11 @@ local Players_Service = game:GetService("Players")
 local ProfileService = require(script.Parent.Parent.ProfileService)
 
 local playerProfile = {
-    ["Fists"] = 0,
-    ["Fighters"] = {"LeKing", "Paul", "Righty"}
+	["Fists"] = 0,
+	["Fighters"] = {"Paul"}
 }
 
-local profileStore = ProfileService.GetProfileStore("PlayerProfile", playerProfile)
+local profileStore = ProfileService.GetProfileStore("PlayerProfile(1)", playerProfile)
 local Profiles = {}
 
 local function PlayerAdded(Player: Player)

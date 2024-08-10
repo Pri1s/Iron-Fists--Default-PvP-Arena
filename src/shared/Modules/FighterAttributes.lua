@@ -1,8 +1,9 @@
+local staminaRegenDenom = 100
+
 local Attributes = {}
 
-local staminaRegenDenom = 10000
-
 Attributes.LeKing = {
+    Amputation = "None",
     headVigor = 500,
     bodyVigor = 150,
     MaxSpeed = 4.5,
@@ -24,6 +25,7 @@ Attributes.LeKing = {
 }
 
 Attributes.Paul = {
+    Amputation = "None",
     headVigor = 425,
     bodyVigor = 115,
     maxSpeed = 6,
@@ -45,6 +47,7 @@ Attributes.Paul = {
 }
 
 Attributes.Righty = {
+    Amputation = "LeftArm",
     headVigor = 425,
     bodyVigor = 125,
     maxSpeed = 8,

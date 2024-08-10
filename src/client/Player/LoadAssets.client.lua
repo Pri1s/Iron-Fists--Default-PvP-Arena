@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
 
-local AssetsLoaded = ReplicatedStorage.Remotes.Setup.AssetsLoaded
+local AssetsLoadedEvent = ReplicatedStorage.Remotes.Events.Setup.AssetsLoaded
 
 local assetsToLoad = {}
 
@@ -14,4 +14,4 @@ for _, Asset in ipairs(assetsToLoad) do
 end
 
 print("Assets loaded!")
-AssetsLoaded:FireServer()
+AssetsLoadedEvent:FireServer()

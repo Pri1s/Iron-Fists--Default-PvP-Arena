@@ -40,4 +40,9 @@ Settings.Environment = {
 
 }
 
+Settings.Credits = {
+    Win = 100,
+    Lose = 30
+}
+
 return Settings

@@ -1,6 +1,6 @@
 local Player_Service = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeleportData = ReplicatedStorage.Remotes.Setup.TeleportData
+local TeleportData = ReplicatedStorage.Remotes.Events.Setup.TeleportData
 
 for _, Character in ipairs(ReplicatedStorage.Characters:GetChildren()) do
     local fighterBoolean = Instance.new("BoolValue", Character)

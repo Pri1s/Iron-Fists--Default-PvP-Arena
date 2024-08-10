@@ -5,12 +5,46 @@ local Functions = require(script.Parent.Functions)
 local Interface = require(ReplicatedStorage.Shared.Modules.Primary.Interface)
 local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttributes)
 
-local KnockedEvent = ReplicatedStorage.Remotes.Ring.Combat.Knocked
+local KnockedEvent = ReplicatedStorage.Remotes.Events.Ring.Combat.Knocked
+
+local Emotes = ReplicatedStorage.Animations.Emotes
+
+local function StopTracks(Tracks)
+
+	for _, value in pairs(Tracks) do
+
+		if typeof(value) == "Instance" and value:IsA("AnimationTrack") then
+			value:Stop()
+		elseif typeof(value) == "table" then
+			StopTracks(value)
+		end
+
+	end
+
+end
+
+local function LoadAnimations(Humanoid, Animations)
+	local loadedAnimations = {}
+
+	for key, value in pairs(Animations) do
+
+		if typeof(value) == "Instance" and value:IsA("Animation") then
+			loadedAnimations[tostring(key)] = Humanoid:LoadAnimation(value)
+		elseif typeof(value) == "table" then
+			loadedAnimations[tostring(key)] = LoadAnimations(Humanoid, value)
+		else
+			loadedAnimations[tostring(key)] = value
+		end
+
+	end
+
+	return loadedAnimations
+end
 
 local States = {}
 States.__index = States
 
-function States.new(Player, Animations, Attributes)
+function States.new(Player)
     local self = setmetatable({}, States)
 
     self.Player = Player
@@ -18,20 +52,59 @@ function States.new(Player, Animations, Attributes)
     self.TimeUi = Player.PlayerGui:WaitForChild("Time")
 
     self.Character = Player.Character
-    self.Animations = Animations
     self.Attributes = FighterAttributes[Player.Character.Humanoid:GetAttribute("Fighter")]
+    
+    local Humanoid = Player.Character.Humanoid
+    local punchAnimations = ReplicatedStorage.Animations.Punches.Amputation[FighterAttributes[Player.Character.Humanoid:GetAttribute("Fighter")].Amputation]
+
+    self.Animations = { -- For code efficiency, try to Load all these animations using the LoadAnimations() function, rather than loading each one individually, manually
+        Walk = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Walk),
+        Block = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Block),
+
+        Emotes = {
+            Ready = Humanoid:LoadAnimation(Emotes.Ready),
+            Celebrate = Humanoid:LoadAnimation(Emotes.Celebrate),
+            Defeat = Humanoid:LoadAnimation(Emotes.Defeat)
+        },
+
+        Punches = {
+            Jabs = LoadAnimations(Humanoid, punchAnimations.Jabs:GetChildren()),
+            Uppercut = Humanoid:LoadAnimation(punchAnimations.Uppercut),
+            Hook = Humanoid:LoadAnimation(punchAnimations.Hook)
+        },
+
+        Collisions = {
+            Knockdown  = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Knockdown),
+            Knockout = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Knockout),
+
+            Punches = {
+                Hook = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Punches.Hook),
+                Jab = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Punches.Jab),
+                Uppercut = Humanoid:LoadAnimation(ReplicatedStorage.Animations.Collisions.Punches.Uppercut)
+            }
+
+        }
+
+    }
 
     self.previousState = nil
     self.currentState = nil
     self.Opponent = nil
     self.Target = nil
     self.currentJab = 1
+    self.maxJabs = #punchAnimations.Jabs:GetChildren()
 
     return self
 end
 
 function States:Initialize(Opponent)
     print("Initialized")
+    local Humanoid = self.Character.Humanoid
+    Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+    Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+    Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+
     self.Opponent = Opponent
     self:UpdateTarget("Body")
     self:Transition("Default", nil)
@@ -49,7 +122,7 @@ function States:GetState()
 end
 
 function States:Transition(newState, substate)
-    warn("Changing state, new state is ", newState)
+    --warn("Changing state, new state is ", newState)
     self.previousState = self.currentState
     self.currentState = newState
 
@@ -62,6 +135,8 @@ function States:Transition(newState, substate)
         self:Attack(substate)
     elseif newState == "Block" then
         self:Block()
+    elseif newState == "Knockback" then
+        self:Knockback(substate)
     end
 
 end
@@ -82,8 +157,10 @@ function States:Reset()
 end
 
 function States:Default(substate)
-    self.Animations.Walk:Stop()
-    self.Animations.Block:Stop()
+    --self.Animations.Walk:Stop()
+    --self.Animations.Block:Stop()
+    StopTracks(self.Animations)
+    
     if self:GetTarget() == "Head" then
         Functions.EnableIKControl(self, false)
     end
@@ -98,19 +175,21 @@ function States:Default(substate)
     elseif substate == "Defeat" then
         self.Animations.Emotes.Defeat:Play()
     elseif substate == "Knockdown" then
-        self.Animations.Thump:Play()
-        print("Knock animation length: ", tostring(self.Animations.Thump.Length))
-        task.wait(self.Animations.Thump.Length - 0.3)
+        self.Animations.Collisions.Knockdown:Play()
+        print("Knock animation length: ", tostring(self.Animations.Collisions.Knockdown.Length))
+        task.wait(self.Animations.Collisions.Knockdown.Length - 0.3)
         KnockedEvent:FireServer("Knockdown")
     elseif substate == "Knockout" then
-        self.Animations.Knockout:Play()
-        print("Knock animation length: ", tostring(self.Animations.Knockout.Length))
-        task.wait(self.Animations.Knockout.Length - 0.45)
+        self.Animations.Collisions.Knockout:Play()
+        print("Knock animation length: ", tostring(self.Animations.Collisions.Knockout.Length))
+        task.wait(self.Animations.Collisions.Knockout.Length - 0.45)
         KnockedEvent:FireServer("Knockout")
     elseif substate == "Disabled" then
+        
         if self.previousState ~= "Default" then
             self.Animations.Walk:Play()
         end
+
     end
 
 end
@@ -119,12 +198,15 @@ function States:Idle()
     self.Animations.Block:Stop()
     self.Animations.Walk:Play()
 
+    if self.Character.Humanoid.WalkSpeed ~= self.Attributes.maxSpeed then
+        self.Character.Humanoid.WalkSpeed = self.Attributes.maxSpeed
+    end
+
     if self.previousState == "Default" then
         self.VitalsUi.Enabled = true
         self.TimeUi.Enabled = true
         self:Reset()
     elseif self.previousState == "Block" then
-        self.Character.Humanoid.WalkSpeed = self.Character.Humanoid.WalkSpeed * 2
         Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, false)
     end
 
@@ -139,10 +221,25 @@ function States:Attack(substate)
 end
 
 function States:Block()
-    self.Animations.Walk:Stop()
+    StopTracks(self.Animations)
     self.Animations.Block:Play()
     self.Character.Humanoid.WalkSpeed = self.Character.Humanoid.WalkSpeed / 2
     Interface.BlockStaminaFrameTransition(self.VitalsUi.Stamina.Block, true)
+end
+
+function States:Knockback(substate)
+    StopTracks(self.Animations)
+    local knockbackTrack = self.Animations.Collisions.Punches[substate]
+    knockbackTrack:Play()
+
+    task.delay((knockbackTrack.Length / 2), function() -- Add a knockback recovery time Attribute in each Fighter
+        
+        if self:GetState() == "Knockback" then
+            self:Transition("Idle")
+        end
+
+    end)
+    
 end
 
 return States

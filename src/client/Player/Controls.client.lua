@@ -4,9 +4,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Player = Players_Service.LocalPlayer
 local Controls = require(Player.PlayerScripts:WaitForChild("PlayerModule")):GetControls()
 
-local ControlsEnabled = ReplicatedStorage.Remotes.Ring.Other["Controls/Enabled"]
+local ControlsEvent = ReplicatedStorage.Remotes.Events.Setup.Controls
 
-ControlsEnabled.OnClientEvent:Connect(function(Status)
+ControlsEvent.OnClientEvent:Connect(function(Status)
 
     if Status == "Disable" then
         Controls:Disable()

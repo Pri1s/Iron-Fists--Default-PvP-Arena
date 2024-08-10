@@ -6,20 +6,33 @@ local Debris = game:GetService("Debris")
 local Settings = require(ReplicatedStorage.Shared.Modules.Settings)
 local FighterAttributes = require(ReplicatedStorage.Shared.Modules.FighterAttributes)
 
-local GetStateFunc = ReplicatedStorage.Remotes.States.Get
-local TransitionStateEvent = ReplicatedStorage.Remotes.States.Transition
-local OpponentData = ReplicatedStorage.Remotes.Ring.Other["Opponent/Data"]
-local DataBindableFunction = ReplicatedStorage.Bindables.Functions.Data
+local Remotes = {
 
-local InitializeViewports = ReplicatedStorage.Remotes.Ring.Combat.Vitals.Health.Initialize
-local IntroEvent = ReplicatedStorage.Remotes.Ring.Primary.Intro
-local CompletionEvent = ReplicatedStorage.Remotes.Ring.Primary.Completion
+    Events = {
+        Intro = ReplicatedStorage.Remotes.Events.Ring.Primary.Intro,
+        Completion = ReplicatedStorage.Remotes.Events.Ring.Primary.Completion,
+        Interface = ReplicatedStorage.Remotes.Events.Interface,
+        Controls = ReplicatedStorage.Remotes.Events.Setup.Controls,
+        Count = ReplicatedStorage.Remotes.Events.Ring.Other.Count,
+        Transition = ReplicatedStorage.Remotes.Events.Transition,
+        toggleCamera = ReplicatedStorage.Remotes.Events.Ring.Other.ToggleCamera,
+        opponentData = ReplicatedStorage.Remotes.Events.Ring.Other.OpponentData,
+        initializeViewports = ReplicatedStorage.Remotes.Events.Ring.Other.InitializeViewports
+    },
 
-local InterfaceEnabled = ReplicatedStorage.Remotes.Other["Interface/Enabled"]
-local TransitionEvent = ReplicatedStorage.Remotes.Other.Transition
-local ControlsEnabled = ReplicatedStorage.Remotes.Ring.Other["Controls/Enabled"]
-local ToggleCamera = ReplicatedStorage.Remotes.Ring.Other.ToggleCamera
-local CountEvent = ReplicatedStorage.Remotes.Ring.Other.Count
+    Functions = {
+        State = ReplicatedStorage.Remotes.Functions.State
+    },
+
+}
+
+local Bindables = {
+
+    Functions = {
+        Data = ReplicatedStorage.Bindables.Functions.Data
+    }
+
+}
 
 local Ring = {}
 Ring.__index = Ring
@@ -61,8 +74,8 @@ function Ring:Count()
     local timeCutShort = false
 
     while totalSeconds > 0 do
-        local player1State = GetStateFunc:InvokeClient(self.playerData.player1.Player)
-        local player2State = GetStateFunc:InvokeClient(self.playerData.player2.Player)
+        local player1State = Remotes.Functions.State:InvokeClient(self.playerData.player1.Player, "Get")
+        local player2State = Remotes.Functions.State:InvokeClient(self.playerData.player2.Player, "Get")
 
         if self.Status == "Round/Complete" or player1State == "Default" or player2State == "Default" then
             timeCutShort = true
@@ -70,12 +83,12 @@ function Ring:Count()
         end
 
         local timeString = string.format("%02d:%02d", math.floor(totalSeconds / 60), totalSeconds % 60)
-        CountEvent:FireAllClients(timeString)
+        Remotes.Events.Count:FireAllClients(timeString)
         task.wait(1)
         totalSeconds = totalSeconds - 1
     end
 
-    CountEvent:FireAllClients("0:00")
+    Remotes.Events.Count:FireAllClients("0:00")
 
     if not timeCutShort then
 
@@ -84,8 +97,8 @@ function Ring:Count()
             local Humanoid = Player.Character.Humanoid
             local Attributes = FighterAttributes[Humanoid:GetAttribute("Fighter")]
 
-            ControlsEnabled:FireClient(Player, "Disable")
-            TransitionStateEvent:FireClient(Player, "Default", nil)
+            Remotes.Events.Controls:FireClients(Player, "Disable")
+            Remotes.Functions.State:InvokeClient(Player, "Update", "Default", nil)
             Humanoid:SetAttribute("HeadVigor", Attributes.headVigor)
             Humanoid:SetAttribute("BodyVigor", Attributes.bodyVigor)
         end
@@ -112,8 +125,8 @@ function Ring:Initialize(playerData)
 
     end
 
-    OpponentData:FireClient(self.playerData.player1.Player, self.playerData.player2.Player)
-    OpponentData:FireClient(self.playerData.player2.Player, self.playerData.player1.Player)
+    Remotes.Events.opponentData:FireClient(self.playerData.player1.Player, self.playerData.player2.Player)
+    Remotes.Events.opponentData:FireClient(self.playerData.player2.Player, self.playerData.player1.Player)
 
     local character1 = player1.Player.Character
     local character2 = player2.Player.Character
@@ -131,7 +144,7 @@ function Ring:Spawn()
     local character2Root = character2.HumanoidRootPart
     local spawn1 = workspace.Ring.Spawns.Round.Player1
     local spawn2 = workspace.Ring.Spawns.Round.Player2
-    ControlsEnabled:FireAllClients("Disable")
+    Remotes.Events.Controls:FireAllClients("Disable")
     character1Root.CFrame = CFrame.lookAt(spawn1.Position, workspace.CameraAngles.Center.Position)
     character2Root.CFrame = CFrame.lookAt(spawn2.Position, workspace.CameraAngles.Center.Position)
     task.wait(3)
@@ -139,9 +152,10 @@ function Ring:Spawn()
 end
 
 function Ring:Intro()
-    IntroEvent:FireClient(self.playerData.player1.Player, "Player1")
-    IntroEvent:FireClient(self.playerData.player2.Player, "Player2")
-    TransitionStateEvent:FireAllClients("Default", "Ready")
+    Remotes.Events.Intro:FireClient(self.playerData.player1.Player, "Player1")
+    Remotes.Events.Intro:FireClient(self.playerData.player2.Player, "Player2")
+    Remotes.Functions.State:InvokeClient(self.playerData.player1.Player, "Update", "Default", "Ready")
+    Remotes.Functions.State:InvokeClient(self.playerData.player2.Player, "Update", "Default", "Ready")
     task.wait(Settings.Delays.introTime)
     self:InitializeRound()
 end
@@ -154,11 +168,12 @@ function Ring:InitializeRound()
     self.Round = self.Round + 1
     player1.Player.Character.Humanoid.IKControl.Enabled = true
     player2.Player.Character.Humanoid.IKControl.Enabled = true
-    InitializeViewports:FireClient(player1.Player, self.playerData.player1.Fighter, self.playerData.player2.Fighter)
-    InitializeViewports:FireClient(player2.Player, self.playerData.player2.Fighter, self.playerData.player1.Fighter)
-    ToggleCamera:FireAllClients(true, "Round/Static")
-    ControlsEnabled:FireAllClients("Enable")
-    TransitionStateEvent:FireAllClients("Idle", nil)
+    Remotes.Events.initializeViewports:FireClient(player1.Player, self.playerData.player1.Fighter, self.playerData.player2.Fighter)
+    Remotes.Events.initializeViewports:FireClient(player2.Player, self.playerData.player2.Fighter, self.playerData.player1.Fighter)
+    Remotes.Events.toggleCamera:FireAllClients(true, "Round/Static")
+    Remotes.Events.Controls:FireAllClients("Enable")
+    Remotes.Functions.State:InvokeClient(self.playerData.player1.Player, "Update", "Idle")
+    Remotes.Functions.State:InvokeClient(self.playerData.player2.Player, "Update", "Idle")
     workspace.Ring.Sounds.BeginRound:Play()
     task.wait(Settings.Delays.Default)
 
@@ -204,7 +219,7 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
     end
 
     local function Complete(victorByKnockout, loserByKnockout)
-        TransitionEvent:FireAllClients()
+        Remotes.Events.Transition:FireAllClients()
         task.wait(Settings.Delays.Transition - 0.4)
         self:Complete(victorByKnockout, loserByKnockout)
     end
@@ -233,7 +248,7 @@ function Ring:CompleteRound(Victor, Opponent, victoryType)
         if self.playerData.player1.Knockdowns >= 3 or self.playerData.player2.Knockdowns >= 3 then
             Complete(nil, nil)
         else
-            TransitionEvent:FireAllClients()
+            Remotes.Events.Transition:FireAllClients()
             task.wait(Settings.Delays.Transition)
             self:Spawn()
         end
@@ -252,14 +267,20 @@ function Ring:Complete(victorByKnockout, loserByKnockout)
     local Victor = nil
     local Opponent = nil
 
-    local function UpdateCredits(Player: Player, Increment: number)
+    local function UpdateCredits(Player, Increment)
         -- methodType, profileName, Player, Key, Value
         print("Updating credits for", Player.Name, "Increment:", Increment)
         local success, result = pcall(function()
-            return DataBindableFunction:Invoke("Update", "Player", Player, "Fists", function(currentCredits)
+            return Bindables.Functions.Data:Invoke("Update", "Player", Player, "Fists", function(currentCredits)
                 -- Ensure currentCredits is a number
                 assert(type(currentCredits) == "number", "Expected currentCredits to be a number")
-                return currentCredits + Increment
+                
+                if currentCredits + Increment < 0 then
+                    return currentCredits
+                else
+                    return currentCredits + Increment
+                end
+                
             end)
         end)
 
@@ -283,18 +304,21 @@ function Ring:Complete(victorByKnockout, loserByKnockout)
         end
     end
 
-    InterfaceEnabled:FireAllClients(false, "Transition")
-    TransitionStateEvent:FireClient(Victor, "Default", "Celebration")
-    TransitionEvent:FireClient(Opponent, "Default", "Defeat")
+    Remotes.Events.Interface:FireAllClients(false, "Transition")
+    Remotes.Functions.State:InvokeClient(Victor, "Update", "Default", "Celebration")
+    Remotes.Functions.State:InvokeClient(Opponent, "Update", "Default", "Defeat")
 
-    -- Update the Victor's credits
-    UpdateCredits(Victor, 5)
+    UpdateCredits(Victor, Settings.Credits.Win)
+    UpdateCredits(Opponent, -(Settings.Credits.Lose))
 
     task.wait(Settings.Delays.Default)
+    
     Victor.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Victor.CFrame
     Opponent.Character.HumanoidRootPart.CFrame = workspace.Ring.Spawns.Completion.Opponent.CFrame
+
     task.wait(Settings.Delays.Transition - 0.25)
-    CompletionEvent:FireAllClients()
+
+    Remotes.Events.Completion:FireAllClients()
     --TeleportService:TeleportAsync(Settings.homeId, {Victor, Opponent}, nil)
 end
 
